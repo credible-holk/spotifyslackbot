@@ -677,28 +677,33 @@ function searchFor(query, resultTypes) {
     let deferred = q.defer();
     let reqUrl = 'https://api.spotify.com/v1/search?limit=50&q='+encodeURIComponent(query)+'&type='+resultTypes.join(',');
 
-    var req = https.request(reqUrl, function(response) {
-        var str = '';
+    var request = require('request');
 
-        response.on('data', function (chunk) {
-            str += chunk;
-        });
+    var headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer '+process.env.SPOTIFY_AUTH_TOKEN+'{'
+    };
 
-        response.on('end', function() {
-            var json = JSON.parse(str);
+    var options = {
+        url: reqUrl,
+        headers: headers
+    };
+
+    function callback(error, response, body) {
+
+        if (!error && response.statusCode == 200) {
+            var json = JSON.parse(body);
             if(json && (json.albums || json.artists || json.tracks || json.playlists)) {
                 deferred.resolve(json);
             }
             else {
                 deferred.reject('Bad response');
             }
-        });
-    });
-    req.end();
+        }
+    }
 
-    req.on('error', function(e) {
-      console.error(e);
-    });
+    request(options, callback)
 
     return deferred.promise;
 }

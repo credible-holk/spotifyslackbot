@@ -21,6 +21,8 @@ module.exports = {
 };
 ```
 
+Set environment variable SPOTIFY_AUTH_TOKEN to the OAuth Token provided by Spotify.
+
 #### Install the required dependencies
 
     npm install
