@@ -923,24 +923,21 @@ function verifyChannel(channel) {
     return false;
 }
 
-app.get('/track/:track', function(req, res) {
+app.get('/track/:artist/:track', function(req, res) {
     var track = req.params.track
-    var context, artist;
+    var context;
+    var artist = req.params.track;
 
-    console.log("Looking up track:\t"+req.params.track)
     let promises = [
         searchFor(track, ['track'])
     ];
 
-    console.log("Number of results:\t"+promises)
     q.all(promises).
     then(results => {
         let parsedResult = parseSearchResultsForTrack(results[0], results[1], track, artist, context);
-        console.log("Parsed results:\t"+parsedResult)
         return parsedResult.length ? parsedResult : q.reject();
     }).
     then(results => {
-        console.log("Results 2:\t"+results)
         if(results.length === 1) {
             playTrack(results[0]).
                 then(ok => {
