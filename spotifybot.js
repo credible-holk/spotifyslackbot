@@ -13,6 +13,9 @@ var lastTrackId;
 var lastVolume = 0;
 var channelId;
 
+var express = require('express');
+var app = express();
+
 var controller = Botkit.slackbot({
     debug: false,
 });
@@ -54,9 +57,15 @@ var init = () => {
             }
         }
     });
+
+    app.get('/', function(req, res) {
+      res.send('Hello Seattle\n');
+    });
+    app.listen(3001);
+    console.log('Listening on port 3001...');
 };
 
-controller.hears(['^help$'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['^help$'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     bot.reply(message,'You can say these things to me:\n'+
         '\t⦿ *next* – _Fed up with the track? Skip it._\n'+
         '\t⦿ *previous* – _Want to hear that again? Just ask._\n'+
@@ -74,7 +83,7 @@ controller.hears(['^help$'],'direct_message,direct_mention,mention', function(bo
     );
 });
 
-controller.hears(['^hello$','^hi$'],'direct_message,direct_mention,mention',function(bot,message) {
+controller.hears(['^hello$','^hi$'],'direct_message,direct_mention,mention,ambient',function(bot,message) {
 
     bot.api.reactions.add({
         timestamp: message.ts,
@@ -97,7 +106,7 @@ controller.hears(['^hello$','^hi$'],'direct_message,direct_mention,mention',func
     });
 });
 
-controller.hears(['repeat(?: (on|off))?'],'direct_message,direct_mention,mention',function(bot,message) {
+controller.hears(['repeat(?: (on|off))?'],'direct_message,direct_mention,mention,ambient',function(bot,message) {
 
     var repeating = true;
 
@@ -126,7 +135,7 @@ controller.hears(['repeat(?: (on|off))?'],'direct_message,direct_mention,mention
     
 });
 
-controller.hears(['shuffle(?: (on|off))?'],'direct_message,direct_mention,mention',function(bot,message) {
+controller.hears(['shuffle(?: (on|off))?'],'direct_message,direct_mention,mention,ambient',function(bot,message) {
 
     var shuffling = true;
 
@@ -171,7 +180,7 @@ track = {
     spotify_url: 'spotify:track:3AhXZa8sUQht0UEdBJgpGc' }
 }
 */
-controller.hears(['what is this','what\'s this','^info$','^playing$','what is playing','what\'s playing'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['what is this','what\'s this','^info$','^playing$','what is playing','what\'s playing'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     Spotify.getTrack(function(err, track){
         if(track) {
             lastTrackId = track.id;
@@ -180,7 +189,7 @@ controller.hears(['what is this','what\'s this','^info$','^playing$','what is pl
     });
 });
 
-controller.hears(['^detail$'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['^detail$'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     Spotify.getTrack(function(err, track){
         if(track) {
             lastTrackId = track.id;
@@ -191,7 +200,7 @@ controller.hears(['^detail$'],'direct_message,direct_mention,mention', function(
     });
 });
 
-controller.hears(['^status$'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['^status$'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     // shuffle, repeat, 
     q.all([checkRunning(), getState(), checkRepeating(), checkShuffling()]).
         then(function(results) {
@@ -218,13 +227,13 @@ controller.hears(['^status$'],'direct_message,direct_mention,mention', function(
         });
 });
 
-controller.hears(['next'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['next'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     Spotify.next(function(err, track){
         bot.reply(message, 'Skipping to the next track...');
     });
 });
 
-controller.hears(['previous','prev'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['previous','prev'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     var currentTrack;
     Spotify.getTrack(function(err, track){
         if(track) {
@@ -248,13 +257,13 @@ controller.hears(['previous','prev'],'direct_message,direct_mention,mention', fu
     });
 });
 
-controller.hears(['start (again|over)'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['start (again|over)'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     Spotify.jumpTo(0, function(err, track){
         bot.reply(message, 'Going back to the start of this track...');
     });
 });
 
-controller.hears(['^play$','^resume$','^go$'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['^play$','^resume$','^go$'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     Spotify.getState(function(err, state){
         if(state.state == 'playing') {
             bot.reply(message, 'Already playing...');
@@ -269,7 +278,7 @@ controller.hears(['^play$','^resume$','^go$'],'direct_message,direct_mention,men
 
 
 let playTrackRegex = '^play track (.*)$';
-controller.hears(playTrackRegex,'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(playTrackRegex,'direct_message,direct_mention,mention,ambient', function(bot, message) {
     // parse play string
     let reg = new RegExp(playTrackRegex);
     let track = reg.exec(message.text)[1];
@@ -343,7 +352,7 @@ controller.hears(playTrackRegex,'direct_message,direct_mention,mention', functio
 });
 
 let playAlbumRegex = '^play album (.*)$';
-controller.hears(playAlbumRegex,'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(playAlbumRegex,'direct_message,direct_mention,mention,ambient', function(bot, message) {
     // parse play string
     let reg = new RegExp(playAlbumRegex);
     let album = reg.exec(message.text)[1];
@@ -379,7 +388,7 @@ controller.hears(playAlbumRegex,'direct_message,direct_mention,mention', functio
 
 });
 
-controller.hears(['^stop$','^pause$','^shut up$'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['^stop$','^pause$','^shut up$'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     Spotify.getState(function(err, state){
         if(state.state != 'playing') {
             bot.reply(message, 'Not currently playing...');
@@ -392,7 +401,7 @@ controller.hears(['^stop$','^pause$','^shut up$'],'direct_message,direct_mention
     });
 });
 
-controller.hears(['louder( \\d+)?','volume up( \\d+)?','pump it( \\d+)?'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['louder( \\d+)?','volume up( \\d+)?','pump it( \\d+)?'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     var increase = message.match ? parseInt(message.match[1], 10) : undefined;
     Spotify.getState(function(err, state){
         var volume = state.volume;
@@ -416,7 +425,7 @@ controller.hears(['louder( \\d+)?','volume up( \\d+)?','pump it( \\d+)?'],'direc
     });
 });
 
-controller.hears(['quieter( \\d+)?','volume down( \\d+)?','turn it down( \\d+)?','shh+( \\d+)?'],'direct_message,direct_mention,mention', function(bot, message) {
+controller.hears(['quieter( \\d+)?','volume down( \\d+)?','turn it down( \\d+)?','shh+( \\d+)?'],'direct_message,direct_mention,mention,ambient', function(bot, message) {
     var decrease = message.match ? parseInt(message.match[1], 10) : undefined;
     Spotify.getState(function(err, state){
         var volume = state.volume;
@@ -440,7 +449,7 @@ controller.hears(['quieter( \\d+)?','volume down( \\d+)?','turn it down( \\d+)?'
     });
 });
 
-controller.hears('set volume (\\d+)','direct_message,direct_mention,mention', function(bot, message) {
+controller.hears('set volume (\\d+)','direct_message,direct_mention,mention,ambient', function(bot, message) {
     var volume = message.match ? parseInt(message.match[1], 10) : undefined;
     Spotify.getState(function(err, state){
         var oldVolume = state.volume;
@@ -466,7 +475,7 @@ controller.hears('set volume (\\d+)','direct_message,direct_mention,mention', fu
 });
 
 
-controller.hears('\\brick ?roll\\b','message,direct_message,direct_mention,mention', function(bot, message) {
+controller.hears('\\brick ?roll\\b','message,direct_message,direct_mention,mention,ambient', function(bot, message) {
     playTrack('spotify:track:4uLU6hMCjMI75M1A2tKUQC').
     then(() => bot.reply(message, ':trollface:'));
 });
@@ -879,7 +888,7 @@ let getArtworkUrlFromTrack = (track, callback) => {
     });
 };
 
-controller.hears(['uptime','identify yourself','who are you','what is your name'],'direct_message,direct_mention,mention',function(bot,message) {
+controller.hears(['uptime','identify yourself','who are you','what is your name'],'direct_message,direct_mention,mention,ambient',function(bot,message) {
     var hostname = os.hostname();
     var uptime = formatUptime(process.uptime());
 
@@ -913,5 +922,45 @@ function verifyChannel(channel) {
 
     return false;
 }
+
+app.get('/track/:track', function(req, res) {
+    var track = req.params.track
+    var context, artist;
+
+    console.log("Looking up track:\t"+req.params.track)
+    let promises = [
+        searchFor(track, ['track'])
+    ];
+
+    console.log("Number of results:\t"+promises)
+    q.all(promises).
+    then(results => {
+        let parsedResult = parseSearchResultsForTrack(results[0], results[1], track, artist, context);
+        console.log("Parsed results:\t"+parsedResult)
+        return parsedResult.length ? parsedResult : q.reject();
+    }).
+    then(results => {
+        console.log("Results 2:\t"+results)
+        if(results.length === 1) {
+            playTrack(results[0]).
+                then(ok => {
+                    res.send('I couldn\'t find that track on that album, but playing my best guess for the track name anyway...');
+                });
+        }
+        else if(results.length === 2) {
+            playTrack(results[0], results[1]).
+                then(ok => {
+                    res.send('No problem 👍');
+                });
+        }
+        else {
+            res.send("Rejected: "+q.reject());
+        }
+    }).
+    catch(err => {
+        console.log('Problem playing track: \"'+message.text+'\"', err);
+        res.send('Sorry, I\'m having trouble with that request 😢');
+    });
+});
 
 init();
