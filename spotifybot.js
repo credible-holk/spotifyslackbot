@@ -59,7 +59,7 @@ var init = () => {
     });
 
     app.get('/', function(req, res) {
-      res.send('Hello Seattle\n');
+      res.send('Please try:\n\ttrack/<artist>/<track>');
     });
     app.listen(3001);
     console.log('Listening on port 3001...');
@@ -923,10 +923,10 @@ function verifyChannel(channel) {
     return false;
 }
 
-app.get('/track/:artist/:track', function(req, res) {
+app.get('/track/:track/:artist', function(req, res) {
     var track = req.params.track
     var context;
-    var artist = req.params.track;
+    var artist = req.params.artist;
 
     let promises = [
         searchFor(track, ['track'])
